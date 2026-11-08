@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Demo Cockpit Connected</title>
+<style>body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:#F1EFED;color:#13212C;display:grid;place-items:center;min-height:100vh;padding:16px}
+.c{background:#fff;border:1px solid #E7F2F5;border-radius:8px;padding:1.5rem;max-width:420px;box-shadow:0 1px 3px rgba(19,33,44,.1)}h1{font-size:1.2rem;margin:0 0 .5rem;color:#36677D}a{color:#36677D;font-weight:600}</style>
+</head>
+<body>
+<div class="c">
+<h1 id="h">Demo Cockpit is connected</h1>
+<p id="p">Go back to Campfire and refresh. Case Study Demo now shows under 3rd Party Apps in the sidebar.</p>
+<p><a href="https://app.meetcampfire.com/v2/dashboard">Back to Campfire</a></p>
+</div>
+<script>
+var q=new URLSearchParams(location.search);
+if(q.get('error')){document.getElementById('h').textContent='Not connected';document.getElementById('p').textContent='Campfire said: '+(q.get('error_description')||q.get('error'))+'. Try again from Campfire Connections.';}
+history.replaceState(null,'',location.pathname);
+</script>
+</body>
+</html>

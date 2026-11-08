@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Connect Demo Cockpit</title>
+<style>body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:#F1EFED;color:#13212C;display:grid;place-items:center;min-height:100vh;padding:16px}</style>
+</head>
+<body>
+<p id="m">Sending you to Campfire to connect Demo Cockpit...</p>
+<script>
+(async function(){
+  var CLIENT_ID='__CLIENT_ID__';
+  if(CLIENT_ID.indexOf('__')===0){document.getElementById('m').textContent='Demo Cockpit is not ready to connect yet.';return;}
+  var REDIRECT='https://alexiscohenseymour-bot.github.io/campfire-demo-cockpit/connected.html';
+  function b64url(buf){return btoa(String.fromCharCode.apply(null,new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+  var rnd=new Uint8Array(32);crypto.getRandomValues(rnd);var verifier=b64url(rnd);
+  var st=new Uint8Array(16);crypto.getRandomValues(st);var state=b64url(st);
+  var challenge=b64url(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier)));
+  try{sessionStorage.setItem('dc-state',state);}catch(e){}
+  var q=new URLSearchParams({client_id:CLIENT_ID,response_type:'code',redirect_uri:REDIRECT,state:state,code_challenge:challenge,code_challenge_method:'S256'});
+  location.replace('https://api.meetcampfire.com/ca/oauth/authorize?'+q.toString());
+})().catch(function(){document.getElementById('m').textContent='Could not start the connection. Try again from Campfire Connections.';});
+</script>
+</body>
+</html>

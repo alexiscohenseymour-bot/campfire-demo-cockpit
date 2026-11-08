@@ -4,125 +4,133 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>Campfire Demo Cockpit</title>
+<title>A Controller's View of Campfire</title>
 <style>
-/* Layout: agenda rail left; slide stage on top; "Show it in Campfire" card grid below for the active segment */
+/* Layout: title band; agenda as a step bar; slide stage; "See it in Campfire" cards. Presenter-only items hidden unless body.presenter */
 :root{
   --bg:#F1EFED;--card:#FFFFFF;--fg:#13212C;--fg2:#264759;--brand:#36677D;--brand-ink:#FFFFFF;--line:#E7F2F5;--soft:#F5FAFC;--accent:#94BFCE;
-  --ok:#86B596;--warn:#E2C06B;--bad:#FF8675;--scen-bg:#FBF6E8;--scen-line:#E2C06B;--chip-ink:#13212C;
+  --ok:#86B596;--warn:#E2C06B;--bad:#FF8675;--chip-ink:#13212C;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0F1A22;--card:#16252F;--fg:#E7F2F5;--fg2:#B7CFD8;--brand:#5C93A8;--brand-ink:#FFFFFF;--line:#264759;--soft:#1B2E3A;--accent:#94BFCE;
-  --scen-bg:#2A2718;--scen-line:#B89A4E;--chip-ink:#13212C;color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0F1A22;--card:#16252F;--fg:#E7F2F5;--fg2:#B7CFD8;--brand:#5C93A8;--brand-ink:#FFFFFF;--line:#264759;--soft:#1B2E3A;--accent:#94BFCE;
-  --scen-bg:#2A2718;--scen-line:#B89A4E;--chip-ink:#13212C;color-scheme:dark}
+  --bg:#0F1A22;--card:#16252F;--fg:#E7F2F5;--fg2:#B7CFD8;--brand:#5C93A8;--line:#264759;--soft:#1B2E3A;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1A22;--card:#16252F;--fg:#E7F2F5;--fg2:#B7CFD8;--brand:#5C93A8;--line:#264759;--soft:#1B2E3A;color-scheme:dark}
 *{box-sizing:border-box}[hidden]{display:none!important}
+.wrap>*{min-width:0}
 html,body{margin:0}
 body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.45}
-.app{display:grid;grid-template-columns:270px minmax(0,1fr);gap:1.25rem;padding-block:1.25rem 2rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1500px;margin:0 auto;align-items:start}
+.wrap{max-width:1200px;margin:0 auto;padding-block:1.25rem 2.5rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:1.25rem}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 1px 3px rgba(19,33,44,.1)}
-/* agenda rail */
-.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 1rem);padding:.75rem;display:grid;gap:.25rem}
-.rail h1{font-size:1rem;margin:.25rem .5rem .1rem;font-weight:600}
-.rail .who{font-size:.8rem;color:var(--fg2);margin:0 .5rem .6rem}
-.seg{display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--fg);font:inherit;padding:.6rem .7rem;border-radius:6px;cursor:pointer}
-.seg:hover{background:var(--soft)}
-.seg b{display:block;font-weight:500;font-size:.95rem}
-.seg small{color:var(--fg2);font-variant-numeric:tabular-nums}
-.seg.on{background:var(--brand);color:var(--brand-ink)}.seg.on small{color:var(--brand-ink);opacity:.85}
-.timer{margin-top:.6rem;border-top:1px solid var(--line);padding:.75rem .5rem .25rem;display:grid;gap:.5rem}
-.clock{font-size:1.6rem;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.02em}
-.clock small{font-size:.85rem;color:var(--fg2);font-weight:500}
-.cue{font-size:.8rem;color:var(--fg2)}
-.tbtns{display:flex;gap:.4rem}
-/* buttons */
-.btn{font:inherit;font-size:.85rem;font-weight:500;border-radius:6px;padding:.4rem .9rem;cursor:pointer;border:1px solid var(--brand);background:var(--card);color:var(--brand)}
-.btn.pri{background:var(--brand);color:var(--brand-ink)}
-.btn:focus-visible,.seg:focus-visible,.thumb:focus-visible,a:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+/* header */
+.hd{display:flex;flex-wrap:wrap;align-items:flex-end;gap:.5rem 1.5rem}
+.hd .eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brand)}
+.hd h1{margin:.15rem 0 0;font-size:1.6rem;font-weight:600;text-wrap:balance;line-height:1.2}
+.hd .by{margin:.25rem 0 0;color:var(--fg2)}
+.hd .grow{flex:1;min-width:260px}
+/* agenda */
+.agenda{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.5rem;padding:.5rem}
+.step{border:0;background:transparent;text-align:left;font:inherit;color:var(--fg);padding:.6rem .75rem;border-radius:6px;cursor:pointer;display:grid;gap:.1rem;min-width:0}
+.step:hover{background:var(--soft)}
+.step .n{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--brand)}
+.step b{font-weight:600;font-size:.95rem}
+.step small{color:var(--fg2);font-size:.8rem}
+.step.on{background:var(--brand);color:var(--brand-ink)}.step.on .n,.step.on small{color:var(--brand-ink);opacity:.9}
 /* stage */
-.main{display:grid;gap:1.25rem;min-width:0}
 .stage{padding:1rem}
 .bar{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin-bottom:.75rem}
-.bar .count{font-weight:600;font-variant-numeric:tabular-nums;min-width:7.5rem;text-align:center}
-.bar .hint{margin-left:auto;font-size:.8rem;color:var(--fg2)}
-.slidewrap{position:relative;background:#0b1419;border-radius:6px;overflow:hidden;aspect-ratio:16/9;max-width:100%}
+.count{font-weight:600;font-variant-numeric:tabular-nums;min-width:6.5rem;text-align:center}
+.bar .sp{flex:1}
+.btn{font:inherit;font-size:.85rem;font-weight:500;border-radius:6px;padding:.4rem .9rem;cursor:pointer;border:1px solid var(--brand);background:var(--card);color:var(--brand)}
+.btn.pri{background:var(--brand);color:var(--brand-ink)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn:focus-visible,.step:focus-visible,.thumb:focus-visible,a:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+.slidewrap{background:#0b1419;border-radius:6px;overflow:hidden;aspect-ratio:16/9;max-width:100%}
 .slidewrap img{width:100%;height:100%;object-fit:contain;display:block}
 .slidewrap:fullscreen{border-radius:0;aspect-ratio:auto;background:#000}
-.notes{margin-top:.75rem;background:var(--soft);border-left:3px solid var(--brand);border-radius:4px;padding:.6rem .8rem;color:var(--fg2);font-size:.9rem}
-.notes b{color:var(--fg)}
-.thumbs{display:flex;gap:.6rem;overflow-x:auto;padding:.75rem .1rem .2rem}
-.thumb{flex:0 0 auto;width:132px;border:2px solid transparent;border-radius:6px;padding:2px;background:transparent;cursor:pointer;color:var(--fg2);font:inherit;font-size:.75rem;text-align:center}
+.thumbs{display:flex;gap:.6rem;overflow-x:auto;padding:.75rem .1rem .1rem}
+.thumb{flex:0 0 auto;width:120px;border:2px solid transparent;border-radius:6px;padding:2px;background:transparent;cursor:pointer;color:var(--fg2);font:inherit;font-size:.72rem;text-align:center}
 .thumb img{width:100%;border-radius:4px;display:block;margin-bottom:3px}
 .thumb.on{border-color:var(--brand);color:var(--fg);font-weight:600}
-/* show it */
+/* see it */
 .show{padding:1rem 1rem 1.25rem}
-.showhd{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;margin-bottom:.9rem}
-.showhd h2{font-size:1.1rem;margin:0;color:var(--brand);font-weight:600}
-.showhd label{margin-left:auto;font-size:.85rem;color:var(--fg2);display:flex;align-items:center;gap:.4rem;cursor:pointer}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.9rem}
-.c{border:1px solid var(--line);border-radius:8px;padding:.9rem;display:flex;flex-direction:column;gap:.35rem;background:var(--card);min-width:0}
-.c.scen{background:var(--scen-bg);border-color:var(--scen-line);border-left-width:4px}
+.show h2{margin:0;font-size:1.1rem;color:var(--brand);font-weight:600}
+.show .lead{margin:.2rem 0 1rem;color:var(--fg2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.9rem}
+.c{border:1px solid var(--line);border-radius:8px;padding:.9rem;display:flex;flex-direction:column;gap:.4rem;background:var(--card);min-width:0}
 .c.ember{border-left:4px solid var(--brand)}
-.tag{align-self:flex-start;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.15rem .55rem;border-radius:10px;background:var(--warn);color:var(--chip-ink)}
-.tag.em{background:var(--accent)}
-.c h3{margin:0;font-size:.98rem;font-weight:600;color:var(--brand)}
+.tag{align-self:flex-start;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.15rem .55rem;border-radius:10px;background:var(--ok);color:var(--chip-ink)}
+.tag.em{background:var(--accent)}.tag.wk{background:var(--warn)}.tag.bk{background:var(--line);color:var(--fg2)}
+.c h3{margin:0;font-size:.98rem;font-weight:600;color:var(--fg)}
 .c p{margin:0;color:var(--fg2);font-size:.88rem}
-.say{display:none;font-size:.85rem;color:var(--fg);background:var(--soft);border-radius:4px;padding:.45rem .6rem;font-style:italic}
-.showsay .say{display:block}
-.prompt{font-family:var(--mono);font-size:.78rem;background:var(--soft);color:var(--fg);border-radius:4px;padding:.45rem .6rem;white-space:pre-wrap}
-.foot{margin-top:auto;padding-top:.4rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.8rem}
-.pill{background:var(--ok);color:var(--chip-ink);font-weight:600;font-size:.72rem;padding:.12rem .55rem;border-radius:10px}
-.foot a{margin-left:auto;color:var(--brand);font-weight:500;text-decoration:none}
-.foot a:hover{text-decoration:underline}
-.foot .none{margin-left:auto;color:var(--fg2)}
-.nav{font-size:.78rem;color:var(--fg2);background:var(--soft);border-radius:4px;padding:.35rem .55rem}
-.setlink{display:flex;gap:.35rem;margin-top:.2rem}
+.q{font-size:.88rem;color:var(--fg);background:var(--soft);border-radius:4px;padding:.5rem .65rem}
+.foot{margin-top:auto;padding-top:.35rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+.open{margin-left:auto;color:var(--brand);font-weight:600;text-decoration:none;font-size:.85rem}
+.open:hover{text-decoration:underline}
+.live{margin-left:auto;font-size:.8rem;color:var(--fg2)}
+/* presenter only */
+.pres{display:none}
+body.presenter .pres{display:block}
+body.presenter .pres.flex{display:flex}
+.c.backup{display:none}body.presenter .c.backup{display:flex}
+.notes{margin-top:.75rem;background:var(--scen,#FBF6E8);border-left:3px solid var(--warn);border-radius:4px;padding:.6rem .8rem;color:#13212C;font-size:.9rem}
+.say{font-size:.82rem;font-style:italic;color:#13212C;background:#FBF6E8;border-radius:4px;padding:.45rem .6rem}
+.ptools{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:#13212C;color:#fff;border-radius:8px;padding:.5rem .75rem;align-items:center;gap:.75rem;flex-wrap:wrap}
+.ptools b{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:#E2C06B}
+.clock{font-size:1.15rem;font-weight:600;font-variant-numeric:tabular-nums}
+.cue{font-size:.82rem;opacity:.85;flex:1;min-width:160px}
+.ptools .btn{background:transparent;color:#fff;border-color:rgba(255,255,255,.5);padding:.25rem .7rem}
+.setlink{display:flex;gap:.35rem}
 .setlink input{flex:1;min-width:0;font:inherit;font-size:.8rem;padding:.3rem .45rem;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--fg)}
 .linkbtn{font:inherit;font-size:.78rem;border:0;background:transparent;color:var(--fg2);cursor:pointer;padding:0;text-decoration:underline}
-.empty{color:var(--fg2);font-size:.9rem}
+.pfoot{display:flex;justify-content:flex-end}
+.ptoggle{font:inherit;font-size:.75rem;border:0;background:transparent;color:var(--fg2);opacity:.55;cursor:pointer}
+.ptoggle:hover{opacity:1}
 .toast{position:fixed;left:50%;bottom:calc(1.25rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:.5rem .9rem;border-radius:6px;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none}
-@media (max-width:860px){.app{grid-template-columns:1fr}.rail{position:static}}
+@media (max-width:700px){.agenda{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
 </head>
 <body>
+<div class="wrap">
+  <div class="ptools pres flex" id="ptools">
+    <b>Presenter</b>
+    <span class="clock" id="clock">0:00 / 15:00</span>
+    <span class="cue" id="cue">Start the timer when you begin.</span>
+    <button class="btn" id="tgo" type="button">Start</button>
+    <button class="btn" id="treset" type="button">Reset</button>
+    <button class="btn" id="pexit" type="button">Hide (P)</button>
+  </div>
 
-<div class="app">
-  <aside class="panel rail" aria-label="Agenda">
-    <h1>Campfire Case Study</h1>
-    <p class="who">Alexis Seymour, CPA &middot; 15 minutes</p>
-    <div id="segs"></div>
-    <div class="timer">
-      <div class="clock" id="clock">0:00 <small>/ 15:00</small></div>
-      <div class="cue" id="cue">Start the timer when you begin.</div>
-      <div class="tbtns"><button class="btn pri" id="tgo" type="button">Start</button><button class="btn" id="treset" type="button">Reset</button></div>
+  <header class="hd">
+    <div class="grow">
+      <div class="eyebrow">Case study</div>
+      <h1>From building the report to running the business</h1>
+      <p class="by">A controller's view of Campfire &middot; Alexis Seymour, CPA</p>
     </div>
-  </aside>
+  </header>
 
-  <main class="main">
-    <section class="panel stage" aria-label="Slides">
-      <div class="bar">
-        <button class="btn" id="prev" type="button">Previous</button>
-        <span class="count" id="count">Slide 1 of 6</span>
-        <button class="btn pri" id="next" type="button">Next</button>
-        <button class="btn" id="fs" type="button">Fullscreen</button>
-        <span class="hint">Arrow keys: slides | F: fullscreen</span>
-      </div>
-      <div class="slidewrap" id="wrap"><img id="slide" alt=""></div>
-      <div class="notes" id="notes"></div>
-      <div class="thumbs" id="thumbs"></div>
-    </section>
+  <nav class="panel agenda" id="agenda" aria-label="Agenda"></nav>
 
-    <section class="panel show" aria-label="Show it in Campfire">
-      <div class="showhd">
-        <h2 id="showtitle">Show it in Campfire</h2>
-        <label><input type="checkbox" id="saytoggle"> From your demo script</label>
-      </div>
-      <div class="grid" id="cards"></div>
-    </section>
-  </main>
+  <section class="panel stage" aria-label="Slides">
+    <div class="bar">
+      <button class="btn" id="prev" type="button">Previous</button>
+      <span class="count" id="count">Slide 1 of 6</span>
+      <button class="btn pri" id="next" type="button">Next</button>
+      <span class="sp"></span>
+      <button class="btn" id="fs" type="button">Fullscreen</button>
+    </div>
+    <div class="slidewrap" id="wrap"><img id="slide" alt=""></div>
+    <div class="notes pres" id="notes"></div>
+    <div class="thumbs" id="thumbs"></div>
+  </section>
+
+  <section class="panel show" aria-label="See it in Campfire">
+    <h2 id="showtitle">See it in Campfire</h2>
+    <p class="lead" id="showlead"></p>
+    <div class="grid" id="cards"></div>
+  </section>
+
+  <div class="pfoot"><button class="ptoggle" id="ptoggle" type="button" title="Presenter mode (P)">&#9679;</button></div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -137,109 +145,93 @@ var NOTES=[
  "You're going to see where the close stands at a glance, and get a variance explanation a board would accept, in seconds. Close with: Instead of spending the close building the report, I get to spend it on what the report is telling me.",
  "Let AI do the reconciling, the schedules, and the first draft of the analysis. My team gets its time back to understand the business. If I'd had Campfire back then, I might still be leading a finance team. Then ask the panel the question on screen, and stop talking."
 ];
-var P1='Why did deferred revenue change from last month? Break it down by customer and flag any contracts that were modified.';
-var P2='Compare operating expenses this month to last month, list the three biggest variances, and draft a short explanation for each.';
 var SEGS=[
- {name:'1. Introduction',time:'0:00 to 2:00',end:2,slides:[0,1,2],title:'Show it in Campfire',cards:[
-   {t:'Home dashboard',d:'Your landing page if the panel asks to see the product before you start.',url:'/v2/dashboard',say:'Keep this in your back pocket. The intro stays on slides.'}
+ {name:'Introduction',dur:'2 min',end:2,slides:[0,1,2],title:'Your team\'s time, redirected',lead:'AI takes on the reconciling, schedules and report building, so finance can focus on what the numbers mean.',cards:[
+   {tag:'Live in Campfire',t:'Home',d:'Where a controller starts the day: the business at a glance.',url:'/v2/dashboard'}
  ]},
- {name:'2. Revenue you can defend',time:'2:00 to 7:30',end:7.5,slides:[3],title:'Show it in Campfire: Revenue',cards:[
-   {t:'Revenue Dashboard',d:'Recognized, deferred and recurring revenue at a glance.',url:'/v2/revenue/dashboard',say:"This is the revenue picture a controller wants on day one: recognized, deferred, and what's coming."},
-   {scen:'contract',t:'Bundled contract',d:'License, hardware and 12 months of maintenance on one contract, each with its allocated price.',say:'Three performance obligations on one contract. Campfire allocates the price across them. That allocation was a spreadsheet tab for me.'},
-   {scen:'contract',t:'Revenue schedule',d:'License and hardware at a point in time, maintenance recognized ratably.',nav:'Contract > revenue schedule',say:'The schedule is generated from the contract itself. Nobody built this.'},
-   {scen:'contract',t:'Mid-term upsell',d:'Amend the contract and add the upsell line. The schedule recalculates from the change date.',nav:'Contract > amend > add line > save',say:'This is the moment that used to cost me a day. A mid-term change, and the schedule just flows through.'},
-   {ember:P1,t:'Ember: deferred revenue',d:'Change by customer, with modified contracts flagged.',say:"I didn't write a report. I asked a question, and it flagged the contract I just changed."},
-   {t:'Balance Sheet tie-out',d:'Deferred revenue ties to the GL. Optional, cut if you are running long.',url:'/v2/reporting/balance-sheet/v2',say:'And it ties to the ledger, which is the first thing my auditor would ask.'},
-   {t:'Contracts',d:'All revenue contracts, if you need to find a backup example.',url:'/v2/revenue/contracts',say:''},
-   {t:'Revenue transactions',d:'Recognition entries behind the schedule.',url:'/v2/revenue/transactions',say:''}
+ {name:'Revenue you can defend',dur:'5 min',end:7.5,slides:[3],title:'See it in Campfire: Revenue',lead:'A bundled contract and a mid-term upsell become an audit-ready revenue schedule, with no spreadsheet.',cards:[
+   {tag:'Live in Campfire',t:'Revenue at a glance',d:'Recognized, deferred and recurring revenue in one view.',url:'/v2/revenue/dashboard',say:"This is the revenue picture a controller wants on day one: recognized, deferred, and what's coming."},
+   {pin:'contract',t:'One contract, three obligations',d:'Software license, hardware and a year of maintenance, with the price allocated across each.',say:'Three performance obligations on one contract. Campfire allocates the price across them. That allocation was a spreadsheet tab for me.'},
+   {pin:'contract',t:'Schedule built from the contract',d:'License and hardware recognized at delivery, maintenance recognized evenly over the term.',say:'The schedule is generated from the contract itself. Nobody built this.'},
+   {pin:'contract',t:'A mid-term upsell, handled',d:'Add to the contract mid-term and the schedule updates from the change date forward.',say:'This is the moment that used to cost me a day. A mid-term change, and the schedule just flows through.'},
+   {ember:'Why did deferred revenue change from last month? Break it down by customer and flag any contracts that were modified.',t:'Ask Ember why deferred revenue moved',d:'A plain-English answer by customer, with changed contracts called out.',say:"I didn't write a report. I asked a question, and it flagged the contract I just changed."},
+   {tag:'Live in Campfire',t:'Ties to the ledger',d:'Deferred revenue on the balance sheet matches the revenue detail, ready for audit.',url:'/v2/reporting/balance-sheet/v2',say:'And it ties to the ledger, which is the first thing my auditor would ask. Optional: cut if running long.'},
+   {backup:1,t:'All contracts',d:'Backup if you need another example.',url:'/v2/revenue/contracts'},
+   {backup:1,t:'Revenue transactions',d:'Recognition entries behind the schedule.',url:'/v2/revenue/transactions'}
  ]},
- {name:'3. A close you can explain',time:'7:30 to 13:00',end:13,slides:[4],title:'Show it in Campfire: Close',cards:[
-   {t:'Close Checklist',d:'Every close task with owner, due date and status.',url:'/v2/close-management/checklist',say:'This is the close at a glance. I used to get this by walking the floor or chasing a shared spreadsheet.'},
-   {scen:'task',t:'Task with support',d:'A checklist task with the workpaper attached and sign-off history.',say:"The support lives on the step. When the auditors ask for the PBC list, it's already here."},
-   {t:'Flux Analysis',d:'Period over period movement by account.',url:'/v2/close-management/flux-analysis',say:"This is where most of my close went: finding what moved. Here it's computed."},
-   {ember:P2,t:'Ember: opex variances',d:'Top three variances with a drafted explanation for each.',say:'I asked for the board-ready version, and Ember drafted it. A first draft, and I can check every line.'},
-   {scen:'drill',t:'Drill to source',d:'The transactions behind the biggest variance.',nav:'Ember answer > click the variance',say:"Here's what makes it trustworthy: every number traces to the transactions."},
-   {scen:'txn',t:'Audit log',d:'Who created the entry, when, and what changed.',nav:'Transaction > audit log',say:"And who touched it, and when. That's an answer a CPA can stand behind."},
-   {t:'Account Reconcile',d:'Balance sheet reconciliations, if asked how support gets built.',url:'/v2/close-management/reconcile',say:''},
-   {t:'Income Statement',d:'Opex by month, if the panel wants the statement view.',url:'/v2/reporting/income-statement/v2',say:''}
+ {name:'A close you can explain',dur:'5 min',end:13,slides:[4],title:'See it in Campfire: Close',lead:'Where the close stands at a glance, and every variance explained and traced to the source.',cards:[
+   {tag:'Live in Campfire',t:'The close at a glance',d:'Every close task with its owner, due date and status.',url:'/v2/close-management/checklist',say:'This is the close at a glance. I used to get this by walking the floor or chasing a shared spreadsheet.'},
+   {pin:'task',t:'Support on every step',d:'Workpapers and sign-offs attached to the task, ready for your auditors.',say:"The support lives on the step. When the auditors ask for the PBC list, it's already here."},
+   {tag:'Live in Campfire',t:'What moved this month',d:'Account by account movement, computed for you.',url:'/v2/close-management/flux-analysis',say:"This is where most of my close went: finding what moved. Here it's computed."},
+   {ember:'Compare operating expenses this month to last month, list the three biggest variances, and draft a short explanation for each.',t:'Ask Ember to explain the variances',d:'The three biggest operating expense changes, each with a drafted explanation.',say:'I asked for the board-ready version, and Ember drafted it. A first draft, and I can check every line.'},
+   {pin:'drill',t:'Traced to the transactions',d:'Click any variance to see the entries behind it.',say:"Here's what makes it trustworthy: every number traces to the transactions."},
+   {pin:'txn',t:'Who changed what, and when',d:'A full audit trail on every entry.',say:"And who touched it, and when. That's an answer a CPA can stand behind."},
+   {backup:1,t:'Account reconciliations',d:'If asked how support gets built.',url:'/v2/close-management/reconcile'},
+   {backup:1,t:'Income statement',d:'If the panel wants the statement view.',url:'/v2/reporting/income-statement/v2'}
  ]},
- {name:'4. Why it matters',time:'13:00 to 15:00',end:15,slides:[5],title:'Close and panel question',cards:[
-   {t:'Panel question',d:'Which of these do you hear most from your customers: defensible, visible, or auditable?',none:'Ask, then stop talking',say:'Whatever they pick, tie it back to the segment you just showed.'},
-   {t:'Ember chat',d:'Open Ember if a panelist wants to ask their own question live.',url:'/v2/ember-studio/new',say:''}
+ {name:'Why it matters',dur:'2 min',end:15,slides:[5],title:'Defensible, visible, auditable',lead:'AI keeps the books current, so finance gets its time back for the business.',cards:[
+   {tag:'Your turn',t:'Which do you hear most from your customers?',d:'Defensible revenue, a visible close, or AI answers you can trace.',say:'Ask, then stop talking. Tie their answer back to the segment you showed.'},
+   {ember:'',t:'Ask Ember your own question',d:'Try any question about this workspace, live.',say:'Offer this if a panelist wants to drive.'}
  ]}
 ];
-var LS='cf-cockpit-v1',pins={},showSay=false;
-try{var sv=JSON.parse(localStorage.getItem(LS)||'{}');pins=sv.pins||{};showSay=!!sv.say;}catch(e){}
-function save(){try{localStorage.setItem(LS,JSON.stringify({pins:pins,say:showSay}));}catch(e){}}
-var cur=0,seg=0;
+var LS='cf-cockpit-cust-v1',pins={},presenter=false;
+try{var sv=JSON.parse(localStorage.getItem(LS)||'{}');pins=sv.pins||{};presenter=!!sv.p;}catch(e){}
+function save(){try{localStorage.setItem(LS,JSON.stringify({pins:pins,p:presenter}));}catch(e){}}
 function $(i){return document.getElementById(i);}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function toast(m){var t=$('toast');t.textContent=m;t.style.opacity=1;clearTimeout(t._h);t._h=setTimeout(function(){t.style.opacity=0;},1800);}
+var cur=0,seg=0;
 function segOf(i){for(var s=0;s<SEGS.length;s++)if(SEGS[s].slides.indexOf(i)>-1)return s;return 0;}
-function renderSegs(){$('segs').innerHTML=SEGS.map(function(s,i){return '<button type="button" class="seg'+(i===seg?' on':'')+'" data-s="'+i+'"><b>'+esc(s.name)+'</b><small>'+s.time+'</small></button>';}).join('');}
-function renderSlide(){
-  $('slide').src=SLIDES[cur];$('slide').alt='Slide '+(cur+1);
-  $('count').textContent='Slide '+(cur+1)+' of '+SLIDES.length;
+function renderAgenda(){$('agenda').innerHTML=SEGS.map(function(s,i){return '<button type="button" class="step'+(i===seg?' on':'')+'" data-s="'+i+'"><span class="n">Part '+(i+1)+'</span><b>'+esc(s.name)+'</b><small>'+s.dur+'</small></button>';}).join('');}
+function renderSlide(){$('slide').src=SLIDES[cur];$('slide').alt='Slide '+(cur+1);$('count').textContent='Slide '+(cur+1)+' of '+SLIDES.length;
   $('notes').innerHTML='<b>Say:</b> '+esc(NOTES[cur]);
   [].forEach.call(document.querySelectorAll('.thumb'),function(t,i){t.classList.toggle('on',i===cur);});
-  $('prev').disabled=cur===0;$('next').disabled=cur===SLIDES.length-1;
-}
-function cardHTML(c,i){
-  var cls='c'+(c.scen?' scen':'')+(c.ember?' ember':'');
-  var h='<div class="'+cls+'">';
-  if(c.scen)h+='<span class="tag">Your scenario</span>';
-  if(c.ember)h+='<span class="tag em">Ember AI</span>';
-  h+='<h3>'+esc(c.t)+'</h3><p>'+esc(c.d)+'</p>';
-  if(c.ember)h+='<div class="prompt">'+esc(c.ember)+'</div>';
-  if(c.say)h+='<div class="say">"'+esc(c.say)+'"</div>';
-  if(c.nav)h+='<div class="nav">Navigate: '+esc(c.nav)+'</div>';
+  $('prev').disabled=cur===0;$('next').disabled=cur===SLIDES.length-1;}
+function card(c,i){
+  var u=c.pin?pins[c.pin]:(c.url?CF+c.url:null);
+  var cls='c'+(c.ember!=null?' ember':'')+(c.backup?' backup':'');
+  var tag=c.backup?'<span class="tag bk">Backup</span>':c.ember!=null?'<span class="tag em">Ember AI</span>':c.pin?'<span class="tag'+(u?'':' wk')+'">'+(u?'Live in Campfire':'Live walkthrough')+'</span>':'<span class="tag'+(c.tag==='Your turn'?' wk':'')+'">'+esc(c.tag||'Live in Campfire')+'</span>';
+  var h='<div class="'+cls+'">'+tag+'<h3>'+esc(c.t)+'</h3><p>'+esc(c.d)+'</p>';
+  if(c.ember)h+='<div class="q">"'+esc(c.ember)+'"</div>';
+  if(c.say)h+='<div class="say pres">'+esc(c.say)+'</div>';
   h+='<div class="foot">';
-  if(c.ember){h+='<button class="btn" type="button" data-copy="'+i+'">Copy prompt</button><a href="'+CF+'/v2/ember-studio/new" target="_blank" rel="noopener">Open Ember</a>';}
-  else if(c.scen){var u=pins[c.scen];
-    h+='<span class="pill">Native</span>'+(u?'<a href="'+esc(u)+'" target="_blank" rel="noopener">Opens in new tab</a>':'<span class="none">No link yet</span>');
-    h+='</div><div class="setlink" data-scen="'+c.scen+'" hidden><input id="pin-'+seg+'-'+i+'" type="url" placeholder="Paste the Campfire URL" value="'+esc(u||'')+'"><button class="btn" type="button" data-save="'+c.scen+'">Save</button></div><div><button class="linkbtn" type="button" data-edit="'+i+'">'+(u?'Change link':'Set link')+'</button>';}
-  else if(c.url){h+='<span class="pill">Native</span><a href="'+CF+c.url+'" target="_blank" rel="noopener">Opens in new tab</a>';}
-  else if(c.none){h+='<span class="none">'+esc(c.none)+'</span>';}
-  h+='</div></div>';return h;
-}
-function renderCards(){var s=SEGS[seg];$('showtitle').textContent=s.title;$('cards').innerHTML=s.cards.map(cardHTML).join('')||'<p class="empty">Nothing to open here.</p>';$('cards').classList.toggle('showsay',showSay);}
-function go(i){cur=Math.max(0,Math.min(SLIDES.length-1,i));var ns=segOf(cur);var ch=ns!==seg;seg=ns;renderSlide();if(ch){renderSegs();renderCards();}}
+  if(c.ember!=null){if(c.ember)h+='<button class="btn pres" type="button" data-copy="'+i+'">Copy question</button>';h+='<a class="open" href="'+CF+'/v2/ember-studio/new" target="_blank" rel="noopener">Open Ember &rarr;</a>';}
+  else if(u){h+='<a class="open" href="'+esc(u)+'" target="_blank" rel="noopener">Open in Campfire &rarr;</a>';}
+  else if(c.pin){h+='<span class="live">Shown live</span>';}
+  h+='</div>';
+  if(c.pin)h+='<div class="pres"><div class="setlink" hidden><input id="pin-'+seg+'-'+i+'" type="url" placeholder="Paste the Campfire URL" value="'+esc(pins[c.pin]||'')+'"><button class="btn" type="button" data-save="'+c.pin+'">Save</button></div><button class="linkbtn" type="button" data-edit="1">'+(pins[c.pin]?'Change link':'Set link')+'</button></div>';
+  return h+'</div>';}
+function renderCards(){var s=SEGS[seg];$('showtitle').textContent=s.title;$('showlead').textContent=s.lead;$('cards').innerHTML=s.cards.map(card).join('');}
+function go(i){cur=Math.max(0,Math.min(SLIDES.length-1,i));var ns=segOf(cur),ch=ns!==seg;seg=ns;renderSlide();if(ch){renderAgenda();renderCards();}}
 $('thumbs').innerHTML=SLIDES.map(function(s,i){return '<button type="button" class="thumb" data-i="'+i+'"><img src="'+s+'" alt="">Slide '+(i+1)+'</button>';}).join('');
-$('thumbs').addEventListener('click',function(e){var b=e.target.closest('[data-i]');if(b)go(+b.getAttribute('data-i'));});
-$('segs').addEventListener('click',function(e){var b=e.target.closest('[data-s]');if(!b)return;seg=+b.getAttribute('data-s');cur=SEGS[seg].slides[0];renderSegs();renderSlide();renderCards();});
+$('thumbs').onclick=function(e){var b=e.target.closest('[data-i]');if(b)go(+b.getAttribute('data-i'));};
+$('agenda').onclick=function(e){var b=e.target.closest('[data-s]');if(!b)return;seg=+b.getAttribute('data-s');cur=SEGS[seg].slides[0];renderAgenda();renderSlide();renderCards();};
 $('prev').onclick=function(){go(cur-1);};$('next').onclick=function(){go(cur+1);};
-function fs(){var w=$('wrap');if(document.fullscreenElement){document.exitFullscreen&&document.exitFullscreen();}else if(w.requestFullscreen){w.requestFullscreen().catch(function(){toast('Fullscreen is not available here');});}}
+function fs(){var w=$('wrap');if(document.fullscreenElement){document.exitFullscreen&&document.exitFullscreen();}else if(w.requestFullscreen){w.requestFullscreen().catch(function(){toast('Fullscreen is not available inside this frame');});}else toast('Fullscreen is not available inside this frame');}
 $('fs').onclick=fs;
+function setP(v){presenter=v;document.body.classList.toggle('presenter',v);save();}
+$('ptoggle').onclick=function(){setP(!presenter);};$('pexit').onclick=function(){setP(false);};
 document.addEventListener('keydown',function(e){if(/INPUT|TEXTAREA/.test(e.target.tagName))return;
   if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();go(cur+1);}
   if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(cur-1);}
-  if(e.key==='f'||e.key==='F'){fs();}});
-$('saytoggle').checked=showSay;
-$('saytoggle').onchange=function(){showSay=this.checked;save();renderCards();};
-$('cards').addEventListener('click',function(e){var c=SEGS[seg].cards;var b;
-  if(b=e.target.closest('[data-copy]')){var txt=c[+b.getAttribute('data-copy')].ember;
-    try{navigator.clipboard.writeText(txt).then(function(){toast('Prompt copied. Paste it into Ember.');},function(){toast('Copy blocked. Select the prompt text instead.');});}catch(x){toast('Copy blocked. Select the prompt text instead.');}}
-  if(b=e.target.closest('[data-edit]')){var box=b.closest('.c').querySelector('.setlink');box.hidden=!box.hidden;if(!box.hidden)box.querySelector('input').focus();}
-  if(b=e.target.closest('[data-save]')){var k=b.getAttribute('data-save');var v=b.parentNode.querySelector('input').value.trim();
-    if(v&&!/^https:\/\/app\.meetcampfire\.com\//.test(v)){toast('Paste a link that starts with https://app.meetcampfire.com/');return;}
-    if(v)pins[k]=v;else delete pins[k];save();renderCards();toast(v?'Link saved for every card that uses it':'Link cleared');}
-});
-/* timer */
+  if(e.key==='f'||e.key==='F')fs();
+  if(e.key==='p'||e.key==='P')setP(!presenter);});
+$('cards').onclick=function(e){var c=SEGS[seg].cards,b;
+  if(b=e.target.closest('[data-copy]')){var txt=c[+b.getAttribute('data-copy')].ember;try{navigator.clipboard.writeText(txt).then(function(){toast('Question copied');},function(){toast('Copy blocked. Select the text instead.');});}catch(x){toast('Copy blocked. Select the text instead.');}}
+  if(b=e.target.closest('[data-edit]')){var box=b.parentNode.querySelector('.setlink');box.hidden=!box.hidden;if(!box.hidden)box.querySelector('input').focus();}
+  if(b=e.target.closest('[data-save]')){var k=b.getAttribute('data-save'),v=b.parentNode.querySelector('input').value.trim();
+    if(v&&!/^https:\/\/app\.meetcampfire\.com\//.test(v)){toast('Use a link that starts with https://app.meetcampfire.com/');return;}
+    if(v)pins[k]=v;else delete pins[k];save();renderCards();toast(v?'Link saved':'Link cleared');}};
 var start=null,acc=0;
 function el(){return acc+(start?Date.now()-start:0);}
-function tick(){var ms=el(),s=Math.floor(ms/1000),m=s/60;
-  $('clock').innerHTML=Math.floor(s/60)+':'+('0'+s%60).slice(-2)+' <small>/ 15:00</small>';
-  var target=SEGS[seg].end,cue;
-  if(!start&&!acc)cue='Start the timer when you begin.';
-  else if(m>15){cue='Over time. Wrap up now.';$('clock').style.color='var(--bad)';}
-  else if(m>13){cue='Slide 6 and the panel question.';$('clock').style.color='var(--warn)';}
-  else{$('clock').style.color='';cue=m>target?'Behind: this segment should end at '+SEGS[seg].time.split(' to ')[1]+'.':'On pace. This segment ends at '+SEGS[seg].time.split(' to ')[1]+'.';}
-  $('cue').textContent=cue;}
+function tick(){var ms=el(),s=Math.floor(ms/1000),m=s/60,end=SEGS[seg].end;
+  $('clock').textContent=Math.floor(s/60)+':'+('0'+s%60).slice(-2)+' / 15:00';
+  var cue;if(!start&&!acc)cue='Start the timer when you begin.';else if(m>15)cue='Over time. Wrap up now.';else if(m>13)cue='Go to slide 6 and the panel question.';else cue=(m>end?'Behind: ':'On pace: ')+SEGS[seg].name+' ends at '+Math.floor(end)+':'+(end%1?'30':'00')+'.';
+  $('cue').textContent=cue;$('clock').style.color=m>15?'#FF8675':m>13?'#E2C06B':'#fff';}
 setInterval(tick,500);
 $('tgo').onclick=function(){if(start){acc=el();start=null;this.textContent='Resume';}else{start=Date.now();this.textContent='Pause';}tick();};
 $('treset').onclick=function(){start=null;acc=0;$('tgo').textContent='Start';tick();};
-renderSegs();renderSlide();renderCards();tick();
+setP(presenter);renderAgenda();renderSlide();renderCards();tick();
 </script>
-
 </body>
 </html>
